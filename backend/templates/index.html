@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Certificate Editor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h2>Certificate Position Editor</h2>
+
+<input type="file" id="templateInput" accept="image/*"><br><br>
+<input type="file" id="csvInput" accept=".csv"><br><br>
+
+<canvas id="canvas"></canvas>
+
+<p>
+  X: <span id="xVal">0</span> |
+  Y: <span id="yVal">0</span>
+</p>
+
+<button id="saveBtn">Save Position</button>
+
+<script src="/static/editor.js"></script>
+</body>
+</html>
