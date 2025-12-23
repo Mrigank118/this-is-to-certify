@@ -1,12 +1,25 @@
 from PIL import Image, ImageDraw, ImageFont
 
 def generate_certificate(
-    name, template_path, output_path,
-    font_path, font_size, color, x, y
+    name: str,
+    template_path: str,
+    output_path: str,
+    font_path: str,
+    font_size: int,
+    color: tuple,
+    x: float,
+    y: float,
 ):
-    img = Image.open(template_path).convert("RGB")
-    draw = ImageDraw.Draw(img)
+    image = Image.open(template_path).convert("RGB")
+    draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(font_path, font_size)
 
-    draw.text((x, y), name, fill=tuple(color), font=font, anchor="mm")
-    img.save(output_path, "PDF")
+    draw.text(
+        (x, y),
+        name,
+        fill=color,
+        font=font,
+        anchor="mm"
+    )
+
+    image.save(output_path, "PDF")
