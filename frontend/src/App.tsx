@@ -18,8 +18,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Generator />} />
-          <Route path="/home" element={<Index />} />
+          <Route path="/generator" element={<Generator />} />
+          <Route path="/" element={<Index />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="*" element={<NotFound />} />

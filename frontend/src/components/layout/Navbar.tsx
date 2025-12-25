@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Award, Sparkles } from "lucide-react";
 
 const navLinks = [
-  { label: "Home", path: "/home" },
-  { label: "Generator", path: "/" },
-  { label: "Templates", path: "/templates" },
-  { label: "Other Tools", path: "/tools" },
+  { label: "Home", path: "/" },
+  { label: "Generator", path: "/generator" },
+  // { label: "Templates", path: "/templates" },
+  // { label: "Other Tools", path: "/tools" },
 ];
 
 export function Navbar() {

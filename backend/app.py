@@ -18,7 +18,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten in prod
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,7 +38,7 @@ FONT_MAP = {
     "garamond": "Garamond.ttf",
 }
 
-# 1️⃣ Upload certificate template
+# Upload certificate template
 @app.post("/api/upload/template")
 async def upload_template(file: UploadFile = File(...)):
     global template_path
@@ -49,7 +49,7 @@ async def upload_template(file: UploadFile = File(...)):
 
     return {"status": "ok", "filename": file.filename}
 
-# 2️⃣ Upload CSV
+# Upload CSV
 @app.post("/api/upload/csv")
 async def upload_csv(file: UploadFile = File(...)):
     global csv_path
@@ -60,7 +60,7 @@ async def upload_csv(file: UploadFile = File(...)):
 
     return {"status": "ok", "filename": file.filename}
 
-# 3️⃣ Generate certificates
+# Generate certificates
 @app.post("/api/generate")
 async def generate(
     x: float = Form(...),
@@ -119,7 +119,7 @@ async def generate(
 
     return {"status": "done"}
 
-# 4️⃣ Download ZIP
+# Download ZIP
 @app.get("/api/download")
 async def download():
     zip_path = os.path.join(OUTPUT, "certificates.zip")
