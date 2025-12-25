@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-import os, csv, zipfile
+import os, csv, zipfile, uuid
 from generator import generate_certificate
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,7 +18,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,7 +38,9 @@ FONT_MAP = {
     "garamond": "Garamond.ttf",
 }
 
+# -------------------------------
 # Upload certificate template
+# -------------------------------
 @app.post("/api/upload/template")
 async def upload_template(file: UploadFile = File(...)):
     global template_path
@@ -47,9 +49,11 @@ async def upload_template(file: UploadFile = File(...)):
     with open(template_path, "wb") as f:
         f.write(await file.read())
 
-    return {"status": "ok", "filename": file.filename}
+    return {"status": "ok"}
 
+# -------------------------------
 # Upload CSV
+# -------------------------------
 @app.post("/api/upload/csv")
 async def upload_csv(file: UploadFile = File(...)):
     global csv_path
@@ -58,9 +62,11 @@ async def upload_csv(file: UploadFile = File(...)):
     with open(csv_path, "wb") as f:
         f.write(await file.read())
 
-    return {"status": "ok", "filename": file.filename}
+    return {"status": "ok"}
 
+# -------------------------------
 # Generate certificates
+# -------------------------------
 @app.post("/api/generate")
 async def generate(
     x: float = Form(...),
@@ -72,26 +78,30 @@ async def generate(
     if not template_path or not csv_path:
         raise HTTPException(status_code=400, detail="Template or CSV missing")
 
-    # 🔹 Resolve font safely
+    # Resolve font
     if font.startswith("custom-"):
         font_file = font.replace("custom-", "") + ".ttf"
     else:
         font_file = FONT_MAP.get(font)
 
     if not font_file:
-        raise HTTPException(status_code=400, detail=f"Unknown font: {font}")
+        raise HTTPException(status_code=400, detail="Unknown font")
 
     font_path = os.path.join(FONTS, font_file)
-
     if not os.path.exists(font_path):
-        raise HTTPException(status_code=400, detail=f"Font file not found: {font_file}")
+        raise HTTPException(status_code=400, detail="Font file not found")
 
     try:
         rgb = tuple(map(int, color.split(",")))
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid color format")
 
-    zip_path = os.path.join(OUTPUT, "certificates.zip")
+    # ✅ Create job
+    job_id = str(uuid.uuid4())
+    job_dir = os.path.join(OUTPUT, job_id)
+    os.makedirs(job_dir, exist_ok=True)
+
+    zip_path = os.path.join(job_dir, "certificates.zip")
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         with open(csv_path, newline="", encoding="utf-8") as f:
@@ -102,12 +112,12 @@ async def generate(
 
             for row in reader:
                 name = row["Name"].strip()
-                out_pdf = os.path.join(OUTPUT, f"{name}.pdf")
+                pdf_path = os.path.join(job_dir, f"{name}.pdf")
 
                 generate_certificate(
                     name=name,
                     template_path=template_path,
-                    output_path=out_pdf,
+                    output_path=pdf_path,
                     font_path=font_path,
                     font_size=fontSize,
                     color=rgb,
@@ -115,20 +125,28 @@ async def generate(
                     y=y,
                 )
 
-                zipf.write(out_pdf, arcname=f"{name}.pdf")
+                zipf.write(pdf_path, arcname=f"{name}.pdf")
 
-    return {"status": "done"}
+    return {
+        "status": "done",
+        "jobId": job_id
+    }
 
+# -------------------------------
 # Download ZIP
-@app.get("/api/download")
-async def download():
-    zip_path = os.path.join(OUTPUT, "certificates.zip")
+# -------------------------------
+@app.get("/api/download/{job_id}")
+async def download(job_id: str):
+    zip_path = os.path.join(OUTPUT, job_id, "certificates.zip")
 
     if not os.path.exists(zip_path):
-        raise HTTPException(status_code=404, detail="No certificates generated yet")
+        raise HTTPException(status_code=404, detail="Invalid job ID")
 
     return FileResponse(
         zip_path,
         media_type="application/zip",
         filename="certificates.zip",
+        headers={
+            "Cache-Control": "no-store"
+        }
     )
