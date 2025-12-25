@@ -8,6 +8,7 @@ import Generator from "./pages/Generator";
 import Templates from "./pages/Templates";
 import Tools from "./pages/Tools";
 import NotFound from "./pages/NotFound";
+import ComingSoon from "./pages/ComingSoon"
 
 const queryClient = new QueryClient();
 
@@ -20,8 +21,8 @@ const App = () => (
         <Routes>
           <Route path="/generator" element={<Generator />} />
           <Route path="/" element={<Index />} />
-          <Route path="/templates" element={<Templates />} />
-          <Route path="/tools" element={<Tools />} />
+          <Route path="/templates" element={<ComingSoon />} />
+          <Route path="/tools" element={<ComingSoon />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

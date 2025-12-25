@@ -5,8 +5,8 @@ import { Award, Sparkles } from "lucide-react";
 const navLinks = [
   { label: "Home", path: "/" },
   { label: "Generator", path: "/generator" },
-  // { label: "Templates", path: "/templates" },
-  // { label: "Other Tools", path: "/tools" },
+  { label: "Templates", path: "/templates" },
+  { label: "Other Tools", path: "/tools" },
 ];
 
 export function Navbar() {
@@ -21,7 +21,7 @@ export function Navbar() {
             <Award className="h-5 w-5" />
           </div>
           <span className="text-lg font-semibold text-foreground">
-            CertifyPro
+            CertifyHQ
           </span>
         </Link>
 
