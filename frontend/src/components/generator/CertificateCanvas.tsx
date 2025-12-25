@@ -8,6 +8,7 @@ interface CustomFont {
 }
 
 interface CertificateCanvasProps {
+  previewRef: React.RefObject<HTMLDivElement>; // 🔥 ADD
   templateUrl: string | null;
   textPosition: { x: number; y: number };
   onPositionChange: (position: { x: number; y: number }) => void;
@@ -28,7 +29,7 @@ export function CertificateCanvas({
   color,
   sampleName,
 }: CertificateCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -63,12 +64,12 @@ export function CertificateCanvas({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !containerRef.current) return;
-    
-    const rect = containerRef.current.getBoundingClientRect();
+    if (!isDragging || !previewRef.current) return;
+
+    const rect = previewRef.current.getBoundingClientRect();
     const newX = Math.max(0, Math.min(e.clientX - dragStart.x, rect.width - 100));
     const newY = Math.max(0, Math.min(e.clientY - dragStart.y, rect.height - 50));
-    
+
     onPositionChange({ x: newX, y: newY });
   };
 
@@ -100,7 +101,7 @@ export function CertificateCanvas({
 
       {/* Canvas Area */}
       <div
-        ref={containerRef}
+        ref={previewRef}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
