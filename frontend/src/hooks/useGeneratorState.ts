@@ -3,8 +3,6 @@ import { toast } from "sonner";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
-
-
 interface UploadFile {
   file: File | null;
   status: "idle" | "uploading" | "success" | "error";
@@ -17,13 +15,19 @@ export function useGeneratorState() {
   const [templateUrl, setTemplateUrl] = useState<string | null>(null);
 
   const [textPosition, setTextPosition] = useState({ x: 300, y: 400 });
-  const [font, setFont] = useState("arial.ttf");
+  const [font, setFont] = useState("arial");
   const [fontSize, setFontSize] = useState(48);
   const [color, setColor] = useState("#000000");
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
+  // ✅ NEW
+  const [jobId, setJobId] = useState<string | null>(null);
+
+  // -------------------------
+  // Upload template
+  // -------------------------
   const uploadTemplate = useCallback(async (file: File) => {
     setTemplateFile({ file, status: "uploading", name: file.name });
 
@@ -47,6 +51,9 @@ export function useGeneratorState() {
     }
   }, []);
 
+  // -------------------------
+  // Upload CSV
+  // -------------------------
   const uploadCsv = useCallback(async (file: File) => {
     setCsvFile({ file, status: "uploading", name: file.name });
 
@@ -69,9 +76,13 @@ export function useGeneratorState() {
     }
   }, []);
 
+  // -------------------------
+  // Generate certificates
+  // -------------------------
   const generateCertificates = useCallback(async () => {
     setIsGenerating(true);
     setIsComplete(false);
+    setJobId(null); // ✅ reset
 
     try {
       const rgb = color
@@ -92,10 +103,12 @@ export function useGeneratorState() {
         body: formData,
       });
 
-      const text = await res.text();
-      console.log("Generate response:", res.status, text);
-      
       if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      // ✅ STORE JOB ID
+      setJobId(data.jobId);
 
       setIsComplete(true);
       toast.success("Certificates generated");
@@ -106,8 +119,17 @@ export function useGeneratorState() {
     }
   }, [textPosition, font, fontSize, color]);
 
+  // -------------------------
+  // Download certificates
+  // -------------------------
   const downloadCertificates = () => {
-    window.location.href = `${API_BASE}/download`;
+    if (!jobId) {
+      toast.error("No generation job found");
+      return;
+    }
+
+    // ✅ job-based download
+    window.location.href = `${API_BASE}/download/${jobId}`;
   };
 
   return {
