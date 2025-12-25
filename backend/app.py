@@ -1,9 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
 import os, csv, zipfile, uuid
+
 from generator import generate_certificate
 
+# -------------------------------
+# Paths
+# -------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 UPLOADS = os.path.join(BASE_DIR, "uploads")
@@ -14,16 +19,22 @@ os.makedirs(UPLOADS, exist_ok=True)
 os.makedirs(OUTPUT, exist_ok=True)
 os.makedirs(FONTS, exist_ok=True)
 
+# -------------------------------
+# App
+# -------------------------------
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # tighten later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# -------------------------------
+# Globals (single-session MVP)
+# -------------------------------
 template_path: str | None = None
 csv_path: str | None = None
 
@@ -39,7 +50,7 @@ FONT_MAP = {
 }
 
 # -------------------------------
-# Upload certificate template
+# Upload template
 # -------------------------------
 @app.post("/api/upload/template")
 async def upload_template(file: UploadFile = File(...)):
@@ -69,16 +80,18 @@ async def upload_csv(file: UploadFile = File(...)):
 # -------------------------------
 @app.post("/api/generate")
 async def generate(
-    x: float = Form(...),
-    y: float = Form(...),
+    x: float = Form(...),          # ratio (0–1)
+    y: float = Form(...),          # ratio (0–1)
     font: str = Form(...),
-    fontSize: int = Form(...),
+    fontSize: float = Form(...),   # ratio
     color: str = Form(...),
 ):
     if not template_path or not csv_path:
         raise HTTPException(status_code=400, detail="Template or CSV missing")
 
+    # -------------------------------
     # Resolve font
+    # -------------------------------
     if font.startswith("custom-"):
         font_file = font.replace("custom-", "") + ".ttf"
     else:
@@ -91,18 +104,36 @@ async def generate(
     if not os.path.exists(font_path):
         raise HTTPException(status_code=400, detail="Font file not found")
 
+    # -------------------------------
+    # Color
+    # -------------------------------
     try:
         rgb = tuple(map(int, color.split(",")))
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid color format")
 
-    # ✅ Create job
+    # -------------------------------
+    # Convert ratios → real pixels
+    # -------------------------------
+    img = Image.open(template_path)
+    img_width, img_height = img.size
+
+    real_x = int(x * img_width)
+    real_y = int(y * img_height)
+    real_font_size = max(10, int(fontSize * img_width))
+
+    # -------------------------------
+    # Job setup
+    # -------------------------------
     job_id = str(uuid.uuid4())
     job_dir = os.path.join(OUTPUT, job_id)
     os.makedirs(job_dir, exist_ok=True)
 
     zip_path = os.path.join(job_dir, "certificates.zip")
 
+    # -------------------------------
+    # Generate PDFs
+    # -------------------------------
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         with open(csv_path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -119,10 +150,10 @@ async def generate(
                     template_path=template_path,
                     output_path=pdf_path,
                     font_path=font_path,
-                    font_size=fontSize,
+                    font_size=real_font_size,
                     color=rgb,
-                    x=x,
-                    y=y,
+                    x=real_x,
+                    y=real_y,
                 )
 
                 zipf.write(pdf_path, arcname=f"{name}.pdf")

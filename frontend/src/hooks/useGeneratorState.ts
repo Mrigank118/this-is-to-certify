@@ -9,6 +9,8 @@ interface UploadFile {
   name?: string;
 }
 
+
+
 export function useGeneratorState() {
   const [templateFile, setTemplateFile] = useState<UploadFile>({ file: null, status: "idle" });
   const [csvFile, setCsvFile] = useState<UploadFile>({ file: null, status: "idle" });
@@ -84,7 +86,22 @@ export function useGeneratorState() {
     setIsComplete(false);
     setJobId(null); // ✅ reset
 
+
     try {
+
+      const preview = document.getElementById("certificate-preview");
+      if (!preview) {
+        toast.error("Preview not found");
+        return;
+      }
+
+      const previewWidth = preview.offsetWidth;
+      const previewHeight = preview.offsetHeight;
+
+      const xRatio = textPosition.x / previewWidth;
+      const yRatio = textPosition.y / previewHeight;
+      const fontRatio = fontSize / previewWidth;
+
       const rgb = color
         .replace("#", "")
         .match(/.{2}/g)!
@@ -92,10 +109,11 @@ export function useGeneratorState() {
         .join(",");
 
       const formData = new FormData();
-      formData.append("x", textPosition.x.toString());
-      formData.append("y", textPosition.y.toString());
+      formData.append("x", xRatio.toString());
+      formData.append("y", yRatio.toString());
       formData.append("font", font);
-      formData.append("fontSize", fontSize.toString());
+      formData.append("fontSize", fontRatio.toString());
+
       formData.append("color", rgb);
 
       const res = await fetch(`${API_BASE}/generate`, {
