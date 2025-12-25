@@ -98,7 +98,7 @@ export function CertificateCanvas({
           Preview Only
         </div>
       </div>
-
+g
       {/* Canvas Area */}
       <div
         ref={previewRef}
