@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
-const API_BASE = "http://127.0.0.1:5000/api";
+const API_BASE = "https://api-certifypro.onrender.com";
 
 
 interface UploadFile {
