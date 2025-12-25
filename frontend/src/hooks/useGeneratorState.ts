@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
-const API_BASE = "https://api-certifypro.onrender.com";
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 
 
 interface UploadFile {
