@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
@@ -9,11 +9,20 @@ interface UploadFile {
   name?: string;
 }
 
-
-
 export function useGeneratorState() {
-  const [templateFile, setTemplateFile] = useState<UploadFile>({ file: null, status: "idle" });
-  const [csvFile, setCsvFile] = useState<UploadFile>({ file: null, status: "idle" });
+  // 🔹 PREVIEW REF (correct place)
+  const previewRef = useRef<HTMLDivElement | null>(null);
+
+  const [templateFile, setTemplateFile] = useState<UploadFile>({
+    file: null,
+    status: "idle",
+  });
+
+  const [csvFile, setCsvFile] = useState<UploadFile>({
+    file: null,
+    status: "idle",
+  });
+
   const [templateUrl, setTemplateUrl] = useState<string | null>(null);
 
   const [textPosition, setTextPosition] = useState({ x: 300, y: 400 });
@@ -23,8 +32,6 @@ export function useGeneratorState() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-
-  // ✅ NEW
   const [jobId, setJobId] = useState<string | null>(null);
 
   // -------------------------
@@ -84,14 +91,12 @@ export function useGeneratorState() {
   const generateCertificates = useCallback(async () => {
     setIsGenerating(true);
     setIsComplete(false);
-    setJobId(null); // ✅ reset
-
+    setJobId(null);
 
     try {
-
-      const preview = document.getElementById("certificate-preview");
+      const preview = previewRef.current;
       if (!preview) {
-        toast.error("Preview not found");
+        toast.error("Preview not ready yet");
         return;
       }
 
@@ -113,7 +118,6 @@ export function useGeneratorState() {
       formData.append("y", yRatio.toString());
       formData.append("font", font);
       formData.append("fontSize", fontRatio.toString());
-
       formData.append("color", rgb);
 
       const res = await fetch(`${API_BASE}/generate`, {
@@ -124,8 +128,6 @@ export function useGeneratorState() {
       if (!res.ok) throw new Error();
 
       const data = await res.json();
-
-      // ✅ STORE JOB ID
       setJobId(data.jobId);
 
       setIsComplete(true);
@@ -146,11 +148,11 @@ export function useGeneratorState() {
       return;
     }
 
-    // ✅ job-based download
     window.location.href = `${API_BASE}/download/${jobId}`;
   };
 
   return {
+    previewRef, // 🔥 IMPORTANT
     templateFile,
     csvFile,
     templateUrl,
@@ -168,6 +170,7 @@ export function useGeneratorState() {
     setColor,
     generateCertificates,
     downloadCertificates,
-    canGenerate: templateFile.status === "success" && csvFile.status === "success",
+    canGenerate:
+      templateFile.status === "success" && csvFile.status === "success",
   };
 }
