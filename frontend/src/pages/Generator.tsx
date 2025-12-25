@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function Generator() {
   const {
+    previewRef,
     templateFile,
     csvFile,
     templateUrl,
@@ -76,6 +77,7 @@ export default function Generator() {
         {/* Main Canvas Area */}
         <main className="flex-1 p-6 overflow-hidden">
           <CertificateCanvas
+           previewRef={previewRef}
             templateUrl={templateUrl}
             textPosition={textPosition}
             onPositionChange={setTextPosition}

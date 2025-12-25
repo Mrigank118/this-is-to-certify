@@ -9,6 +9,12 @@ interface UploadFile {
   name?: string;
 }
 
+interface CustomFont {
+  name: string;
+  file: File;
+  url: string;
+}
+
 export function useGeneratorState() {
   // 🔹 PREVIEW REF (correct place)
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -33,6 +39,8 @@ export function useGeneratorState() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+
+const [customFont, setCustomFont] = useState<CustomFont | null>(null);
 
   // -------------------------
   // Upload template
@@ -168,6 +176,8 @@ export function useGeneratorState() {
     setFont,
     setFontSize,
     setColor,
+    customFont,
+    setCustomFont,
     generateCertificates,
     downloadCertificates,
     canGenerate:
